@@ -1,0 +1,31 @@
+# Environment / secrets
+.env
+.env.*
+
+# Python virtual environment
+env/
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Generated/cache data
+api_cache/
+backups/
+ingest.lock
+index_state.json
+ingest_report.json
+
+# Generated audio
+*.mp3
+*.wav
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

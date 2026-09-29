@@ -1,0 +1,51 @@
+# Reproducible pgvector database for the land-records RAG app.
+#
+#   docker compose up -d          start (or restart) the database
+#   docker compose down           stop, keeping the data
+#   docker compose logs -f postgres
+#
+# The `rag_pgdata` named volume holds the cluster, so `docker compose down` and
+# any image rebuild keep all 14,912 chunks. The name is pinned with `name:`
+# because Compose would otherwise prefix it with the project directory.
+#
+# Back up (the volume protects against container rebuilds, not host disk loss):
+#   docker compose exec -T postgres pg_dump -U rag -d rag -Fc -f /tmp/rag.dump
+#   docker compose cp postgres:/tmp/rag.dump ./backups/rag-$(date +%F).dump
+#
+# Restore, into an empty database:
+#   docker compose cp ./backups/rag-<date>.dump postgres:/tmp/rag.dump
+#   docker compose exec -T postgres pg_restore -U rag -d rag --clean /tmp/rag.dump
+#
+# backups/rag_pre_migration.dump (56.6 MB) is a verified copy of the full
+# cluster: it was restored into a throwaway container and returned all 14,912
+# chunks / 7,542 records, 0 null vectors, 12,700 with pdf_url, 7 indexes.
+# sha256 85EC8B444293CF4AB51CB8A6C6338A4FA0838107AAC418546BCBA56C63123835
+# The original anonymous volume from the pre-compose container was removed
+# after that restore test, so this dump is the only rollback artifact.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: rag_pgvector
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_DB: rag
+    ports:
+      - "55432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # A checkpoint flushes the write-ahead log and writes the stats file, so the
+    # data directory left on the volume is self-consistent even on a hard kill.
+    stop_grace_period: 30s
+    stop_signal: SIGINT
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  pgdata:
+    name: rag_pgdata

@@ -1,0 +1,22 @@
+# Chat / UI
+streamlit==1.47.0
+gtts==2.5.4
+python-dotenv==1.1.1
+
+# LangChain. The 0.3.x pins matter: langchain-postgres 0.0.18+ requires
+# langchain-core 1.x, which breaks this 0.3 stack.
+langchain==0.3.26
+langchain-community==0.3.27
+langchain-core==0.3.86
+langchain-groq==0.3.6
+langchain-postgres==0.0.15
+
+# Vector store
+pgvector==0.3.6
+psycopg[binary]==3.3.6
+psycopg-pool==3.3.3
+
+# Embeddings
+sentence-transformers==5.0.0
+torch==2.14.0
+transformers==4.53.3
